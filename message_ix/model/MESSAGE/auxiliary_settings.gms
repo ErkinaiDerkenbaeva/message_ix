@@ -7,7 +7,7 @@ file logfile / '' / ;
 put logfile ;
 
 * get yourself a short listing file
-option limrow = 50 ;     # number of rows (equations) reported in lst file
+option limrow = 0 ;     # number of rows (equations) reported in lst file
 option limcol = 0 ;     # number of columns reported in lst file
 option solprint = off ; # solver's solution output printed
 option savepoint = 0 ;  # creates a result gdx file after every solve
