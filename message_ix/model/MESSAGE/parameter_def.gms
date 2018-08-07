@@ -569,6 +569,8 @@ Parameters
 *
 *    * - Parameter name
 *      - Index dimensions
+*    * - generic_share_factor_up
+*      - ``shares`` | ``node`` | ``year_act`` | ``time`` | ``type_tec_share`` | ``type_tec_total``
 *    * - share_factor_up
 *      - ``shares`` | ``node_loc`` | ``year_act`` | ``time``
 *    * - share_factor_lo
@@ -581,6 +583,7 @@ Parameters
 ***
 
 Parameters
+    generic_share_factor_up(shares,node,year_all,time,type_tec,type_tec)    upper bound of generic share constraint
     share_factor_up(shares,node,year_all,time)    upper bound of share constraint
     share_factor_lo(shares,node,year_all,time)    lower bound of share constraint
     share_mode_up(shares,node,tec,mode,year_all,time)    upper bound of mode share constraint

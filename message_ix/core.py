@@ -35,11 +35,35 @@ def _init_scenario(s, commit=False):
                         idx_names=['shares', 'commodity', 'level',
                                    'type_tec_share', 'type_tec_total'])
                 }),
+                (s.init_set, {
+                    'args': ('map_shares_generic_share',),
+                    'kwargs': dict(
+                        idx_sets=['shares', 'node', 'node', 'type_tec', 'mode',
+                                  'commodity', 'level', 'year', 'time'],
+                        idx_names=['shares', 'node', 'node_loc', 'type_tec', 'mode',
+                                   'commodity', 'level', 'year_act', 'time'])
+                }),
+                (s.init_set, {
+                    'args': ('map_shares_generic_total',),
+                    'kwargs': dict(
+                        idx_sets=['shares', 'node', 'node', 'type_tec', 'mode',
+                                  'commodity', 'level', 'year', 'time'],
+                        idx_names=['shares', 'node', 'node_loc', 'type_tec', 'mode',
+                                   'commodity', 'level', 'year_act', 'time'])
+                }),
                 (s.init_par, {
                     'args': ('share_factor_up',),
                     'kwargs': dict(
                         idx_sets=['shares', 'node', 'year', 'time'],
                         idx_names=['shares', 'node_loc', 'year_act', 'time'])
+                }),
+                (s.init_par, {
+                    'args': ('generic_share_factor_up',),
+                    'kwargs': dict(
+                        idx_sets=['shares', 'node', 'year', 'time',
+                                  'type_tec', 'type_tec'],
+                        idx_names=['shares', 'node', 'year_act', 'time',
+                                   'type_tec_share', 'type_tec_total'])
                 }),
                 (s.init_par, {
                     'args': ('share_factor_lo',),
