@@ -1413,6 +1413,9 @@ SHARES_COMMODITY_LEVEL_LO(shares,node,commodity,level,year,time,type_tec_share,t
     )
 ;
 
+***
+* TODO: add docs
+***
 SHARES_GENERIC_UP(shares,node,year,time,type_tec_share,type_tec_total)$(
     generic_share_factor_up(shares,node,year,time,type_tec_share,type_tec_total)
 )..
@@ -1430,26 +1433,26 @@ SHARES_GENERIC_UP(shares,node,year,time,type_tec_share,type_tec_total)$(
         duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
     )
-*     +
-* * activity by type_tec_share technologies with map_shares_generic_share entries and mode == 'all'
-*     SUM( (location,tec,commodity,level,time2)$(
-* 	map_shares_generic_share(shares,node,location,type_tec_share,'all',commodity,level,year,time) AND
-*         cat_tec(type_tec_share,tec) AND
-*     ),
-* 	SUM( (vintage,mode2)$(
-* 	    map_tec_lifetime(node,tec,vintage,year) AND
-* 	    map_tec_mode(node,tec,year,mode2)))
-* 	)
-* 	    (
-* 		output(location,tec,vintage,year,mode2,node,commodity,level,time2,time) +
-* 		input(location,tec,vintage,year,mode2,node,commodity,level,time2,time)
-* 	    ) *
-* 	    duration_time_rel(time,time2) *
-* 	    ACT(location,tec,vintage,year,mode2,time2)
-* 	)
-*     )
+    +
+* activity by type_tec_share technologies with map_shares_generic_share entries and mode == 'all'
+    SUM( (node2,location,tec,commodity,level,time2)$(
+	map_shares_generic_share(shares,node,location,type_tec_share,'all',commodity,level,year,time) AND
+        cat_tec(type_tec_share,tec)
+    ),
+	SUM( (vintage,mode2)$(
+	    map_tec_lifetime(location,tec,vintage,year) AND
+	    map_tec_mode(location,tec,year,mode2)
+	),
+	    (
+		output(location,tec,vintage,year,mode2,node2,commodity,level,time2,time) +
+		input(location,tec,vintage,year,mode2,node2,commodity,level,time2,time)
+	    ) *
+	    duration_time_rel(time,time2) *
+	    ACT(location,tec,vintage,year,mode2,time2)
+	)
+    )
     =L=
-    generic_share_factor_up(shares,node,year,time,type_tec_share,type_tec_total) *
+    generic_share_factor_up(shares,node,year,time,type_tec_share,type_tec_total) * (
 * activity by type_tec_total technologies with map_shares_generic_total entries and a specific mode
     SUM( (node2,location,tec,vintage,mode,commodity,level,time2)$(
 	map_shares_generic_total(shares,node,location,type_tec_total,mode,commodity,level,year,time) AND
@@ -1464,24 +1467,25 @@ SHARES_GENERIC_UP(shares,node,year,time,type_tec_share,type_tec_total)$(
         duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
     )
-*     +
-* * activity by type_tec_total technologies with map_shares_generic_total entries and mode == 'all'
-*     SUM( (location,tec,commodity,level,time2)$(
-* 	map_shares_generic_total(shares,node,location,type_tec_total,'all',commodity,level,year,time) AND
-*         cat_tec(type_tec_total,tec) AND
-*     ),
-* 	SUM( (vintage,mode2)$(
-* 	    map_tec_lifetime(node,tec,vintage,year) AND
-* 	    map_tec_mode(node,tec,year,mode2)))
-* 	)
-* 	    (
-* 		output(location,tec,vintage,year,mode2,node,commodity,level,time2,time) +
-* 		input(location,tec,vintage,year,mode2,node,commodity,level,time2,time)
-* 	    ) *
-* 	    duration_time_rel(time,time2) *
-* 	    ACT(location,tec,vintage,year,mode2,time2)
-* 	)
-*     )
+    +
+* activity by type_tec_total technologies with map_shares_generic_total entries and mode == 'all'
+    SUM( (node2,location,tec,commodity,level,time2)$(
+	map_shares_generic_total(shares,node,location,type_tec_total,'all',commodity,level,year,time) AND
+        cat_tec(type_tec_total,tec)
+    ),
+	SUM( (vintage,mode2)$(
+	    map_tec_lifetime(location,tec,vintage,year) AND
+	    map_tec_mode(location,tec,year,mode2)
+	),
+	    (
+		output(location,tec,vintage,year,mode2,node2,commodity,level,time2,time) +
+		input(location,tec,vintage,year,mode2,node2,commodity,level,time2,time)
+	    ) *
+	    duration_time_rel(time,time2) *
+	    ACT(location,tec,vintage,year,mode2,time2)
+	)
+    )
+    )
 ;
 
 ***

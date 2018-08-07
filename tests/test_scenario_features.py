@@ -97,9 +97,6 @@ def test_generic_share_up(test_mp):
     transport_from_san-diego (original: 550). Expected outcome: some increase
     of transport_from_san-diego with some decrease of production in seattle.
     """
-    scen = Scenario(test_mp, *msg_args)
-    scen.solve()
-
     # data for share bound
     def calc_share(s):
         a = s.var('ACT', filters={'technology': ['canning_plant'],
@@ -107,23 +104,16 @@ def test_generic_share_up(test_mp):
         b = calculate_activity(s, tec='transport_from_san-diego').sum()
         return a / b
 
-    exp = 0.5
-
-    # check shares orig, should be bigger than expected bound
-    orig = calc_share(scen)
-    assert orig > exp
-
-    # add share constraints
-    clone = scen.clone('foo', 'baz', keep_sol=False)
-    clone.check_out()
-    clone.add_set('type_tec', ['share', 'total'])
-    cat_tec = [
-        ['share', 'canning_plant'],
-        ['total', 'transport_from_san-diego'],
-    ]
-    clone.add_set('cat_tec', cat_tec)
-    clone.add_set('shares', 'test-share')
-    clone.add_set('map_shares_generic_share',
+    # common operations for both subtests
+    def add_data(s, map_df):
+        s.add_set('type_tec', ['share', 'total'])
+        cat_tec = [
+            ['share', 'canning_plant'],
+            ['total', 'transport_from_san-diego'],
+        ]
+        s.add_set('cat_tec', cat_tec)
+        s.add_set('shares', 'test-share')
+        s.add_set('map_shares_generic_share',
                   pd.DataFrame({
                       'shares': 'test-share',
                       'node': 'seattle',
@@ -135,19 +125,8 @@ def test_generic_share_up(test_mp):
                       'year_act': 2010,
                       'time': 'year',
                   }, index=[0]))
-    clone.add_set('map_shares_generic_total',
-                  pd.DataFrame({
-                      'shares': 'test-share',
-                      'node': 'seattle',
-                      'node_loc': 'san-diego',
-                      'type_tec': 'total',
-                      'mode': ['to_new-york', 'to_chicago', 'to_topeka'],
-                      'commodity': 'cases',
-                      'level': 'consumption',
-                      'year_act': 2010,
-                      'time': 'year',
-                  }))
-    clone.add_par('generic_share_factor_up',
+        s.add_set('map_shares_generic_total', map_df)
+        s.add_par('generic_share_factor_up',
                   pd.DataFrame({
                       'shares': 'test-share',
                       'node': 'seattle',
@@ -158,6 +137,31 @@ def test_generic_share_up(test_mp):
                       'unit': '%',
                       'value': 0.5,
                   }, index=[0]))
+
+    # initial data
+    scen = Scenario(test_mp, *msg_args)
+    scen.solve()
+    exp = 0.5
+
+    # check shares orig, should be bigger than expected bound
+    orig = calc_share(scen)
+    assert orig > exp
+
+    # add share constraints for modes explicitly
+    map_df = pd.DataFrame({
+        'shares': 'test-share',
+        'node': 'seattle',
+        'node_loc': 'san-diego',
+        'type_tec': 'total',
+        'mode': ['to_new-york', 'to_chicago', 'to_topeka'],
+        'commodity': 'cases',
+        'level': 'consumption',
+        'year_act': 2010,
+        'time': 'year',
+    })
+    clone = scen.clone('foo', 'baz', keep_sol=False)
+    clone.check_out()
+    add_data(clone, map_df)
     clone.commit('foo')
     clone.solve()
 
@@ -168,6 +172,36 @@ def test_generic_share_up(test_mp):
     # check obj
     orig_obj = scen.var('OBJ')['lvl']
     new_obj = clone.var('OBJ')['lvl']
+    assert new_obj >= orig_obj
+
+    # add share constraints with mode == 'all'
+    map_df2 = pd.DataFrame({
+        'shares': 'test-share',
+        'node': 'seattle',
+        'node_loc': 'san-diego',
+        'type_tec': 'total',
+        'mode': 'all',
+        'commodity': 'cases',
+        'level': 'consumption',
+        'year_act': 2010,
+        'time': 'year',
+    }, index=[0])
+    clone2 = scen.clone('foo', 'bar', keep_sol=False)
+    clone2.check_out()
+    add_data(clone2, map_df2)
+    clone2.commit('foo')
+    clone2.solve()
+
+    # check shares new, should be lower than expected bound
+    obs2 = calc_share(clone2)
+    assert obs2 <= exp
+
+    # it should also be the same as the share with explicit modes
+    assert obs == obs2
+
+    # check obj
+    orig_obj = scen.var('OBJ')['lvl']
+    new_obj = clone2.var('OBJ')['lvl']
     assert new_obj >= orig_obj
 
 
