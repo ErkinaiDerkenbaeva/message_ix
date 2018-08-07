@@ -40,16 +40,18 @@ def _init_scenario(s, commit=False):
                     'kwargs': dict(
                         idx_sets=['shares', 'node', 'node', 'type_tec', 'mode',
                                   'commodity', 'level', 'year', 'time'],
-                        idx_names=['shares', 'node', 'node_loc', 'type_tec', 'mode',
-                                   'commodity', 'level', 'year_act', 'time'])
+                        idx_names=['shares', 'node', 'node_loc', 'type_tec',
+                                   'mode', 'commodity', 'level', 'year_act',
+                                   'time'])
                 }),
                 (s.init_set, {
                     'args': ('map_shares_generic_total',),
                     'kwargs': dict(
                         idx_sets=['shares', 'node', 'node', 'type_tec', 'mode',
                                   'commodity', 'level', 'year', 'time'],
-                        idx_names=['shares', 'node', 'node_loc', 'type_tec', 'mode',
-                                   'commodity', 'level', 'year_act', 'time'])
+                        idx_names=['shares', 'node', 'node_loc', 'type_tec',
+                                   'mode', 'commodity', 'level', 'year_act',
+                                   'time'])
                 }),
                 (s.init_par, {
                     'args': ('share_factor_up',),
