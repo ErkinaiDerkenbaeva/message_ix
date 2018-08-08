@@ -133,9 +133,8 @@ Sets
 
 * definition of aliases
 Alias(node,location);
-Alias(node,subnode);
 Alias(node,node2);
-Alias(node,node3);
+Alias(node,node_share);
 Alias(tec,tec2);
 Alias(commodity,commodity2);
 Alias(level,level2);

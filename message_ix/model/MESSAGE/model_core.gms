@@ -283,6 +283,7 @@ Equations
     ACTIVITY_BOUND_ALL_MODES_UP     upper bound on activity summed over all vintages and modes
     ACTIVITY_BOUND_ALL_MODES_LO     lower bound on activity summed over all vintages and modes
     SHARE_CONSTRAINT_COMMODITY_UP   upper bounds on share constraints for commodities
+    SHARE_CONSTRAINT_COMMODITY_LO   lower bounds on share constraints for commodities
     SHARE_CONSTRAINT_MODE_UP        upper bounds on share constraints for modes of a given technology
     SHARE_CONSTRAINT_MODE_LO        lower bounds on share constraints for modes of a given technology
     ACTIVITY_CONSTRAINT_UP          dynamic constraint on the market penetration of a tgeneric_share_factor_upechnology activity (upper bound)
@@ -1314,40 +1315,77 @@ SHARE_CONSTRAINT_MODE_LO(shares,node,tec,mode,year,time)$(
 ***
 * TODO: add docs
 ***
-SHARE_CONSTRAINT_COMMODITY_UP(shares,node,year,time)$( share_commodity_up(shares,node,year,time) )..
+SHARE_CONSTRAINT_COMMODITY_UP(shares,node_share,year,time)$( share_commodity_up(shares,node_share,year,time) )..
 * activity by type_tec_share technologies with map_shares_generic_share entries and a specific mode
-    SUM( (node2,location,type_tec_share,tec,vintage,mode,commodity,level,time2)$(
-	( map_shares_commodity_share(shares,node,location,type_tec_share,mode,commodity,level) OR
-	   map_shares_commodity_share(shares,node,location,type_tec_share,mode,commodity,level) ) AND
+    SUM( (node,location,type_tec_share,tec,vintage,mode,commodity,level,time2)$(
+	( map_shares_commodity_share(shares,node_share,node,type_tec_share,mode,commodity,level) OR
+	   map_shares_commodity_share(shares,node_share,node,type_tec_share,'all',commodity,level) ) AND
         cat_tec(type_tec_share,tec) AND
         map_tec_act(location,tec,year,mode,time2) AND
         map_tec_lifetime(location,tec,vintage,year)
     ),
         (
-	    output(location,tec,vintage,year,mode,node2,commodity,level,time2,time) +
-	    input(location,tec,vintage,year,mode,node2,commodity,level,time2,time)
+	    output(location,tec,vintage,year,mode,node,commodity,level,time2,time) +
+	    input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
 	) *
         duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
     )
     =L=
-    share_commodity_up(shares,node,year,time) * (
-* activity by type_tec_total technologies with map_shares_generic_total entries and a specific mode
-    SUM( (node2,location,type_tec_total,tec,vintage,mode,commodity,level,time2)$(
-	( map_shares_commodity_total(shares,node,location,type_tec_total,mode,commodity,level) OR
-	   map_shares_commodity_total(shares,node,location,type_tec_total,'all',commodity,level) ) AND
+    share_commodity_up(shares,node_share,year,time) * (
+* total input and output by `type_tec_total` technologies mapped to respective commodity, level and node
+    SUM( (node,location,type_tec_total,tec,vintage,mode,commodity,level,time2)$(
+	( map_shares_commodity_total(shares,node_share,node,type_tec_total,mode,commodity,level) OR
+	   map_shares_commodity_total(shares,node_share,node,type_tec_total,'all',commodity,level) ) AND
         cat_tec(type_tec_total,tec) AND
         map_tec_act(location,tec,year,mode,time2) AND
         map_tec_lifetime(location,tec,vintage,year)
     ),
         (
-	    output(location,tec,vintage,year,mode,node2,commodity,level,time2,time) +
-	    input(location,tec,vintage,year,mode,node2,commodity,level,time2,time)
+	    output(location,tec,vintage,year,mode,node,commodity,level,time2,time) +
+	    input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
 	) *
         duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
-    ) )
-    
+    ) )   
+;
+
+***
+* TODO: add docs
+***
+SHARE_CONSTRAINT_COMMODITY_LO(shares,node_share,year,time)$( share_commodity_lo(shares,node_share,year,time) )..
+* total input and output by `type_tec_share` technologies mapped to respective commodity, level and node
+    SUM( (node,location,type_tec_share,tec,vintage,mode,commodity,level,time2)$(
+	( map_shares_commodity_share(shares,node_share,node,type_tec_share,mode,commodity,level) OR
+	   map_shares_commodity_share(shares,node_share,node,type_tec_share,'all',commodity,level) ) AND
+        cat_tec(type_tec_share,tec) AND
+        map_tec_act(location,tec,year,mode,time2) AND
+        map_tec_lifetime(location,tec,vintage,year)
+    ),
+        (
+	    output(location,tec,vintage,year,mode,node,commodity,level,time2,time) +
+	    input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
+	) *
+        duration_time_rel(time,time2) *
+        ACT(location,tec,vintage,year,mode,time2)
+    )
+    =G=
+    share_commodity_lo(shares,node_share,year,time) * (
+* total input and output by `type_tec_total` technologies mapped to respective commodity, level and node
+    SUM( (node,location,type_tec_total,tec,vintage,mode,commodity,level,time2)$(
+	( map_shares_commodity_total(shares,node_share,node,type_tec_total,mode,commodity,level) OR
+	   map_shares_commodity_total(shares,node_share,node,type_tec_total,'all',commodity,level) ) AND
+        cat_tec(type_tec_total,tec) AND
+        map_tec_act(location,tec,year,mode,time2) AND
+        map_tec_lifetime(location,tec,vintage,year)
+    ),
+        (
+	    output(location,tec,vintage,year,mode,node,commodity,level,time2,time) +
+	    input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
+	) *
+        duration_time_rel(time,time2) *
+        ACT(location,tec,vintage,year,mode,time2)
+    ) )   
 ;
 
 ***

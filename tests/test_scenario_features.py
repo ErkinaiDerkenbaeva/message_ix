@@ -76,7 +76,7 @@ def test_add_bound_activity_up_all_modes(test_mp):
     assert new_obj >= orig_obj
 
 
-def test_generic_share_up(test_mp):
+def test_commodity_share_up(test_mp):
     """Origial Solution
     ----------------
 
@@ -106,12 +106,9 @@ def test_generic_share_up(test_mp):
 
     # common operations for both subtests
     def add_data(s, map_df):
-        s.add_set('type_tec', ['share', 'total'])
-        cat_tec = [
-            ['share', 'canning_plant'],
-            ['total', 'transport_from_san-diego'],
-        ]
-        s.add_set('cat_tec', cat_tec)
+        s.add_cat('technology', 'share', 'canning_plant')
+        s.add_cat('technology', 'total', 'transport_from_san-diego')
+
         s.add_set('shares', 'test-share')
         s.add_set('map_shares_commodity_share',
                   pd.DataFrame({
@@ -121,13 +118,13 @@ def test_generic_share_up(test_mp):
                       'type_tec': 'share',
                       'mode': 'production',
                       'commodity': 'cases',
-                      'level': 'supply'
+                      'level': 'supply',
                   }, index=[0]))
         s.add_set('map_shares_commodity_total', map_df)
         s.add_par('share_commodity_up',
                   pd.DataFrame({
                       'shares': 'test-share',
-                      'node': 'seattle',
+                      'node_share': 'seattle',
                       'year_act': 2010,
                       'time': 'year',
                       'unit': '%',
@@ -151,7 +148,7 @@ def test_generic_share_up(test_mp):
         'type_tec': 'total',
         'mode': ['to_new-york', 'to_chicago', 'to_topeka'],
         'commodity': 'cases',
-        'level': 'consumption'
+        'level': 'supply'
     })
     clone = scen.clone(scen='share_mode_list', keep_sol=False)
     clone.check_out()
@@ -176,7 +173,7 @@ def test_generic_share_up(test_mp):
         'type_tec': 'total',
         'mode': 'all',
         'commodity': 'cases',
-        'level': 'consumption'
+        'level': 'supply'
     }, index=[0])
     clone2 = scen.clone(scen='share_all_modes', keep_sol=False)
     clone2.check_out()
@@ -197,7 +194,7 @@ def test_generic_share_up(test_mp):
     assert new_obj >= orig_obj
 
 
-def test_add_share_output_lo(test_mp):
+def test_share_commodity_lo(test_mp):
     scen = Scenario(test_mp, *msg_args)
     scen.solve()
 
@@ -209,31 +206,39 @@ def test_add_share_output_lo(test_mp):
             s, tec='transport_from_san-diego').loc['to_new-york']
         return a / (a + b)
 
-    exp = 1.05 * calc_share(scen)
+    exp = 1. * calc_share(scen)
 
     # add share constraints
-    clone = scen.clone('foo', 'baz', keep_sol=False)
+    clone = scen.clone(scen='share_commodity_lo', keep_sol=False)
     clone.check_out()
-    clone.add_set('type_tec', ['share', 'total'])
-    cat_tec = [
-        ['share', 'transport_from_seattle'],
-        ['total', 'transport_from_seattle'],
-        ['total', 'transport_from_san-diego'],
-    ]
-    clone.add_set('cat_tec', cat_tec)
+    clone.add_cat('technology', 'share', 'transport_from_seattle')
+    clone.add_cat('technology', 'total', ['transport_from_seattle',
+                                          'transport_from_san-diego'])
     clone.add_set('shares', 'test-share')
-    clone.add_set('map_shares_commodity_level',
+    clone.add_set('map_shares_commodity_share',
                   pd.DataFrame({
                       'shares': 'test-share',
+                      'node_share': 'new-york',
+                      'node': 'new-york',
+                      'type_tec': 'share',
+                      'mode': 'all',
                       'commodity': 'cases',
                       'level': 'consumption',
-                      'type_tec_share': 'share',
-                      'type_tec_total': 'total',
                   }, index=[0]))
-    clone.add_par('share_factor_lo',
+    clone.add_set('map_shares_commodity_total',
                   pd.DataFrame({
                       'shares': 'test-share',
-                      'node_loc': 'new-york',
+                      'node_share': 'new-york',
+                      'node': 'new-york',
+                      'type_tec': 'total',
+                      'mode': 'all',
+                      'commodity': 'cases',
+                      'level': 'consumption',
+                  }, index=[0]))
+    clone.add_par('share_commodity_lo',
+                  pd.DataFrame({
+                      'shares': 'test-share',
+                      'node_share': 'new-york',
                       'year_act': 2010,
                       'time': 'year',
                       'unit': 'cases',
@@ -263,7 +268,7 @@ def test_add_share_mode_up(test_mp):
     exp = 0.95 * calc_share(scen)
 
     # add share constraints
-    clone = scen.clone('foo', 'baz', keep_sol=False)
+    clone = scen.clone(scen='share_mode_up', keep_sol=False)
     clone.check_out()
     clone.add_set('shares', 'test-share')
     clone.add_par('share_mode_up',
