@@ -294,9 +294,10 @@ Sets
     map_spatial_hierarchy(lvl_spatial,node,node)    mapping of spatial resolution to nodes (last index is 'parent')
     map_temporal_hierarchy(lvl_temporal,time,time)  mapping of temporal resolution to time (last index is 'parent')
 
-    map_shares_commodity_level(shares,commodity,level,type_tec,type_tec)   mapping of commodity and level share constraints
-    map_shares_generic_share(shares,node,node,type_tec,mode,commodity,level,year_all,time)   mapping for generic share constraints numerator
-    map_shares_generic_total(shares,node,node,type_tec,mode,commodity,level,year_all,time)   mapping for generic share constraints denominator
+    map_shares_commodity_share(shares,node,
+        node,type_tec,mode,commodity,level)   mapping for commodity share constraints (numerator)
+    map_shares_commodity_total(shares,node,
+        node,type_tec,mode,commodity,level)   mapping for commodity share constraints (denominator)
     
     map_land(node,land_scenario,year_all)            mapping of land-use model emulator scenarios to nodes and years
     map_relation(relation,node,year_all)             mapping of generic (user-defined) relations to nodes and years
