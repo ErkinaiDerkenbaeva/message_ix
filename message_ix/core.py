@@ -30,20 +30,18 @@ def _init_scenario(s, commit=False):
                 (s.init_set, {
                     'args': ('map_shares_commodity_share',),
                     'kwargs': dict(
-#                        idx_sets=['shares', 'node', 'node', 'type_tec', 'mode',
-#                                  'commodity', 'level', 'year', 'time'],
-                        idx_sets=['shares', 'node', 'node', 'type_tec', 
-                                  'mode', 'commodity', 'level'], 
-                        idx_names=['shares', 'node_share', 'node', 'type_tec', 
-                                   'mode', 'commodity', 'level']) 
+                        idx_sets=['shares', 'node', 'node', 'type_tec',
+                                  'mode', 'commodity', 'level'],
+                        idx_names=['shares', 'node_share', 'node', 'type_tec',
+                                   'mode', 'commodity', 'level'])
                 }),
                 (s.init_set, {
                     'args': ('map_shares_commodity_total',),
                     'kwargs': dict(
-                        idx_sets=['shares', 'node', 'node', 'type_tec', 
-                                  'mode', 'commodity', 'level'], 
-                        idx_names=['shares', 'node_share', 'node', 'type_tec', 
-                                   'mode', 'commodity', 'level']) 
+                        idx_sets=['shares', 'node', 'node', 'type_tec',
+                                  'mode', 'commodity', 'level'],
+                        idx_names=['shares', 'node_share', 'node', 'type_tec',
+                                   'mode', 'commodity', 'level'])
                 }),
                 (s.init_par, {
                     'args': ('share_commodity_up',),
