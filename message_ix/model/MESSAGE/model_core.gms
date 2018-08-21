@@ -6,7 +6,7 @@
 * The |MESSAGEix| systems-optimization model minimizes total costs
 * while satisfying given demand levels for commodities/services
 * and considering a broad range of technical/engineering constraints and societal restrictions
-* (e.g. bounds on greenhouse gas emissions, pollutants).
+* (e.g. bounds on greenhouse gas emissions, pollutants, system reliability).
 * Demand levels are static (i.e. non-elastic), but the demand response can be integrated by linking |MESSAGEix|
 * to the single sector general-economy MACRO model included in this framework.
 *
@@ -70,9 +70,9 @@
 * :math:`REN_{n,t,c,g,y,h}`                     Activity of renewable technologies per grade
 * :math:`CAP\_NEW_{n,t,y} \in \mathbb{R}_+`     Newly installed capacity (yearly average over period duration)
 * :math:`CAP_{n,t,y^V,y} \in \mathbb{R}_+`      Maintained capacity in year :math:`y` of vintage :math:`y^V`
-* :math:`CAP\_FIRM_{n,t,c,l,y,q}`                Capacity counting towards firm (dispatchable)  
+* :math:`CAP\_FIRM_{n,t,c,l,y,q}`               Capacity counting towards firm (dispatchable)  
 * :math:`ACT_{n,t,y^V,y,m,h} \in \mathbb{R}`    Activity of a technology (by vintage, mode, subannual time)
-* :math:`ACT\_RATING_{n,t,y^V,y,c,l,h,q} \in \mathbb{R}_+` Activity attributed to a particular rating bin [#ACT_RATING]_
+* :math:`ACT\_RATING_{n,t,y^V,y,c,l,h,q}`       Activity attributed to a particular rating bin [#ACT_RATING]_
 * :math:`CAP\_NEW\_UP_{n,t,y} \in \mathbb{R}_+` Relaxation of upper dynamic constraint on new capacity
 * :math:`CAP\_NEW\_LO_{n,t,y} \in \mathbb{R}_+` Relaxation of lower dynamic constraint on new capacity
 * :math:`ACT\_UP_{n,t,y,h} \in \mathbb{R}_+`    Relaxation of upper dynamic constraint on activity [#ACT_BD]_
@@ -612,7 +612,7 @@ STOCKS_BALANCE(node,commodity,level,year)$( map_stocks(node,commodity,level,year
 *
 * Equation CAPACITY_CONSTRAINT
 * """"""""""""""""""""""""""""
-* This constraint ensures that the actual activity of a technology at a node/time cannot exceed available (maintained)
+* This constraint ensures that the actual activity of a technology at a node cannot exceed available (maintained)
 * capacity summed over all vintages, including the technology capacity factor :math:`capacity\_factor_{n,t,y,t}`.
 *
 *  .. math::
@@ -629,81 +629,78 @@ CAPACITY_CONSTRAINT(node,inv_tec,vintage,year,time)$( map_tec_time(node,inv_tec,
         =L= duration_time(time) * capacity_factor(node,inv_tec,vintage,year,time) * CAP(node,inv_tec,vintage,year) ;
 
 ***
-* Equations CAPACITY_MAINTENANCE_HIST, CAPACITY_MAINTENANCE_NEW, CAPACITY_MAINTENANCE
-* """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-* These three constraints deal with technology capacity maintenance. They ensure that capacity is maintained over time until decommissioning, and fixed O\&M costs must be paid immediately after commissioning.
+* Equation CAPACITY_MAINTENANCE_HIST 
+* """"""""""""""""""""""""""""""""""
+* The following three constraints implement technology capacity maintenance over time to allow early retirment.
+* The optimization problem determines the optimal timing of retirement, when fixed operation-and-maintenance costs
+* exceed the benefit in the objective function.
 *
-* CAPACITY_MAINTENANCE_HIST ensures that capacity built before the first model year is maintained until decomissioning.
+* The first constraint ensures that historical capacity (built before the first model period) is available
+* in the first model period.
 *
 *   .. math::
-*      CAP_{n,t,y^V,first\_period}
-*      \leq
-*      remaining\_capacity_{n,t,y^V,first\_period} \cdot
-*      duration\_period_{y^V} \cdot
-*      historical\_new\_capacity_{n,t,y^V}
-*
+*      CAP_{n,t,y^V,first\_period} \leq
+*          remaining\_capacity_{n,t,y^V,first\_period} \cdot
+*          duration\_period_{y^V} \cdot
+*          historical\_new\_capacity_{n,t,y^V} \\
 *      \quad & \text{if } y^V  < first\_period \text{ and } |y| - |y^V| < technical\_lifetime_{n,t,y^V}
-*
 *      \quad \forall \ t \in T^{INV}
 *
-* CAPACITY_MAINTENANCE_NEW ensures that capacity built during a model period is maintained to the end of the model period. Thus, that technologies cannot appear in CAP_NEW and not in CAP for the same model period.
-*
-*   .. math::
-*      CAP_{n,t,y^V,y^V}
-*      \eq
-*      remaining\_capacity_{n,t,y^V,y^V} \cdot
-*      duration\_period_{y^V} \cdot
-*      CAP\_NEW{n,t,y^V}
-*
-*      \quad & \text{if } |y^V| - |y^V| < technical\_lifetime_{n,t,y^V}
-*
-*      \quad \forall \ t \in T^{INV}
-*
-*
-* CAPACITY_MAINTENANCE ensures technology capacity maintainance over time until decommissioning.
-*
-*   .. math::
-*      CAP_{n,t,y^V,y} \leq
-*      remaining\_capacity_{n,t,y^V,y} \cdot
-*      CAP_{n,t,y^V,y-1}
-*      \quad & \text{if } y > y^V \text{ and } y^V  > first\_period \text{ and } |y| - |y^V| < technical\_lifetime_{n,t,y^V}
-*
-*      \quad \forall \ t \in T^{INV}
-*
-*
-* The current formulation does not account for construction time in the constraints, but only adds a mark-up
-* to the investment costs in the objective function.
 ***
-
-
-* historical installation (built before start of model horizon)
 CAPACITY_MAINTENANCE_HIST(node,inv_tec,vintage,first_period)$( map_tec_lifetime(node,inv_tec,vintage,first_period)
         AND historical(vintage))..
     CAP(node,inv_tec,vintage,first_period)
     =L= remaining_capacity(node,inv_tec,vintage,first_period) *
-        duration_period(vintage) * historical_new_capacity(node,inv_tec,vintage)
-;
+        duration_period(vintage) * historical_new_capacity(node,inv_tec,vintage) ;
 
-* new capacity built in the current period (vintage == year)
+***
+* Equation CAPACITY_MAINTENANCE_NEW
+* """""""""""""""""""""""""""""""""
+* The second constraint ensures that capacity is fully maintained throughout the model period
+* in which it was constructed (no early retirement in the period of construction).
+*
+*   .. math::
+*      CAP_{n,t,y^V,y^V} =
+*          remaining\_capacity_{n,t,y^V,y^V} \cdot
+*          duration\_period_{y^V} \cdot
+*          CAP\_NEW{n,t,y^V}
+*      \quad \forall \ t \in T^{INV}
+*
+***
 CAPACITY_MAINTENANCE_NEW(node,inv_tec,vintage,vintage)$( map_tec_lifetime(node,inv_tec,vintage,vintage) )..
     CAP(node,inv_tec,vintage,vintage)
     =E= remaining_capacity(node,inv_tec,vintage,vintage)
-        * duration_period(vintage) * CAP_NEW(node,inv_tec,vintage)
-;
+        * duration_period(vintage) * CAP_NEW(node,inv_tec,vintage) ;
 
-* total installed capacity at the end of the previous period
+***
+* Equation CAPACITY_MAINTENANCE
+* """""""""""""""""""""""""""""
+* The third constraint implements the dynamic of capacity maintenance thorughout the model horizon
+* until decommissioning.
+*
+*
+*   .. math::
+*      CAP_{n,t,y^V,y} \leq
+*          remaining\_capacity_{n,t,y^V,y} \cdot
+*          CAP_{n,t,y^V,y-1}
+*      \quad & \text{if } y > y^V \text{ and } y^V  > first\_period \text{ and } |y| - |y^V| < technical\_lifetime_{n,t,y^V}
+*      \quad \forall \ t \in T^{INV}
+*
+* The current formulation does not account for construction time in the constraints, but only adds a mark-up
+* to the investment costs in the objective function.
+***
 CAPACITY_MAINTENANCE(node,inv_tec,vintage,year)$( map_tec_lifetime(node,inv_tec,vintage,year)
-                                                    AND NOT historical(vintage)
-                                                    AND year_order(vintage) < year_order(year))..
+        AND NOT historical(vintage) AND year_order(vintage) < year_order(year))..
     CAP(node,inv_tec,vintage,year)
     =L= remaining_capacity(node,inv_tec,vintage,year) *
         ( SUM(year2$( seq_period(year2,year) ),
-              CAP(node,inv_tec,vintage,year2) )  )
-;
+              CAP(node,inv_tec,vintage,year2) ) ) ;
+
 ***
 * Equation OPERATION_CONSTRAINT
 * """""""""""""""""""""""""""""
 * This constraint provides an upper bound on the total operation of installed capacity over a year.
+* It can be used to represent reuqired scheduled unavailability of installed capacity.
 *
 *   .. math::
 *      \sum_{m,h} ACT_{n,t,y^V,y,m,h}
