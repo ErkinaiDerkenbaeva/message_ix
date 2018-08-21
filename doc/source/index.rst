@@ -5,15 +5,15 @@ The |MESSAGEix| framework
    :width: 320px
    :align: right
    
-   Key features of the |ixmp| (source: :cite:`huppmann_messageix_2018`)
+   The |ixmp| (source: :cite:`huppmann_messageix_2018`)
 
 Overview and scope
 ------------------
 
-|MESSAGEix| is a versatile, open-source, dynamic systems-optimization model.
+|MESSAGEix| is a versatile, open-source, dynamic systems-optimization modelling framework.
 It was developed for strategic energy planning and integrated assessment of
 energy-engineering-economy-environment systems (E4).
-It can be applied to analyse scenarios of the energy system transformation
+The framework can be applied to analyse scenarios of the energy system transformation
 under technical-engineering constraints and political-societal considerations.
 The optimization model can be linked to the general-economy MACRO model
 to incorporate feedback between prices and demand levels for energy and commodities.
