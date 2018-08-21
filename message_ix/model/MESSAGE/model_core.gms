@@ -609,7 +609,11 @@ STOCKS_BALANCE(node,commodity,level,year)$( map_stocks(node,commodity,level,year
 *
 * Technical and engineering constraints
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-*
+* The first set of constraints concern technologies that have explicit investment decisions
+* and where installed/maintained capacity is relevant for operational decisions.
+* The set where :math:`T^{INV} \subseteq T` is the set of all these technologies.
+
+* 
 * Equation CAPACITY_CONSTRAINT
 * """"""""""""""""""""""""""""
 * This constraint ensures that the actual activity of a technology at a node cannot exceed available (maintained)
@@ -618,10 +622,8 @@ STOCKS_BALANCE(node,commodity,level,year)$( map_stocks(node,commodity,level,year
 *  .. math::
 *     \sum_{m} ACT_{n,t,y^V,y,m,h}
 *         \leq duration\_time_{h} \cdot capacity\_factor_{n,t,y^V,y,h} \cdot CAP_{n,t,y^V,y}
-*         \quad t \ \in \ T^{INV}
+*         \quad \forall \ t \ \in \ T^{INV}
 *
-* where :math:`T^{INV} \subseteq T` is the set of all technologies
-* for which investment decisions and capacity constraints are relevant.
 ***
 CAPACITY_CONSTRAINT(node,inv_tec,vintage,year,time)$( map_tec_time(node,inv_tec,year,time)
         AND map_tec_lifetime(node,inv_tec,vintage,year) )..
@@ -635,15 +637,15 @@ CAPACITY_CONSTRAINT(node,inv_tec,vintage,year,time)$( map_tec_time(node,inv_tec,
 * The optimization problem determines the optimal timing of retirement, when fixed operation-and-maintenance costs
 * exceed the benefit in the objective function.
 *
-* The first constraint ensures that historical capacity (built before the first model period) is available
-* in the first model period.
+* The first constraint ensures that historical capacity (built prior to the model horizon) is available
+* as installed capacity in the first model period.
 *
 *   .. math::
-*      CAP_{n,t,y^V,first\_period} \leq
-*          remaining\_capacity_{n,t,y^V,first\_period} \cdot
+*      CAP_{n,t,y^V,'first\_period'} & \leq
+*          remaining\_capacity_{n,t,y^V,'first\_period'} \cdot
 *          duration\_period_{y^V} \cdot
 *          historical\_new\_capacity_{n,t,y^V} \\
-*      \quad & \text{if } y^V  < first\_period \text{ and } |y| - |y^V| < technical\_lifetime_{n,t,y^V}
+*      & \text{if } y^V  < 'first\_period' \text{ and } |y| - |y^V| < technical\_lifetime_{n,t,y^V}
 *      \quad \forall \ t \in T^{INV}
 *
 ***
@@ -666,6 +668,8 @@ CAPACITY_MAINTENANCE_HIST(node,inv_tec,vintage,first_period)$( map_tec_lifetime(
 *          CAP\_NEW{n,t,y^V}
 *      \quad \forall \ t \in T^{INV}
 *
+* The current formulation does not account for construction time in the constraints, but only adds a mark-up
+* to the investment costs in the objective function.
 ***
 CAPACITY_MAINTENANCE_NEW(node,inv_tec,vintage,vintage)$( map_tec_lifetime(node,inv_tec,vintage,vintage) )..
     CAP(node,inv_tec,vintage,vintage)
@@ -675,19 +679,16 @@ CAPACITY_MAINTENANCE_NEW(node,inv_tec,vintage,vintage)$( map_tec_lifetime(node,i
 ***
 * Equation CAPACITY_MAINTENANCE
 * """""""""""""""""""""""""""""
-* The third constraint implements the dynamic of capacity maintenance thorughout the model horizon
-* until decommissioning.
-*
+* The third constraint implements the dynamics of capacity maintenance throughout the model horizon.
+* Installed capacity can be maintained over time until decommissioning, which is irreversible.
 *
 *   .. math::
-*      CAP_{n,t,y^V,y} \leq
+*      CAP_{n,t,y^V,y} & \leq
 *          remaining\_capacity_{n,t,y^V,y} \cdot
-*          CAP_{n,t,y^V,y-1}
-*      \quad & \text{if } y > y^V \text{ and } y^V  > first\_period \text{ and } |y| - |y^V| < technical\_lifetime_{n,t,y^V}
+*          CAP_{n,t,y^V,y-1} \\
+*      \quad & \text{if } y > y^V \text{ and } y^V  > 'first\_period' \text{ and } |y| - |y^V| < technical\_lifetime_{n,t,y^V}
 *      \quad \forall \ t \in T^{INV}
 *
-* The current formulation does not account for construction time in the constraints, but only adds a mark-up
-* to the investment costs in the objective function.
 ***
 CAPACITY_MAINTENANCE(node,inv_tec,vintage,year)$( map_tec_lifetime(node,inv_tec,vintage,year)
         AND NOT historical(vintage) AND year_order(vintage) < year_order(year))..
