@@ -706,6 +706,7 @@ CAPACITY_MAINTENANCE(node,inv_tec,vintage,year)$( map_tec_lifetime(node,inv_tec,
 *   .. math::
 *      \sum_{m,h} ACT_{n,t,y^V,y,m,h}
 *          \leq operation\_factor_{n,t,y^V,y} \cdot capacity\_factor_{n,t,y^V,y,m,\text{'year'}} \cdot CAP_{n,t,y^V,y}
+*      \quad \forall \ t \in T^{INV}
 *
 * This constraint is only active if :math:`operation\_factor_{n,t,y^V,y} < 1`.
 ***
@@ -722,6 +723,7 @@ OPERATION_CONSTRAINT(node,inv_tec,vintage,year)$( map_tec_lifetime(node,inv_tec,
 *
 *   .. math::
 *      \sum_{m,h} ACT_{n,t,y^V,y,m,h} \geq min\_utilization\_factor_{n,t,y^V,y} \cdot CAP_{n,t,y^V,y}
+*      \quad \forall \ t \in T^{INV}
 *
 * This constraint is only active if :math:`min\_utilization\_factor_{n,t,y^V,y}` is defined.
 ***
@@ -754,8 +756,7 @@ RENEWABLES_EQUIVALENCE(node,renewable_tec,commodity,year,time)$(
                  map_tec_act(node,renewable_tec,year,mode,time)
                  AND map_tec_lifetime(node,renewable_tec,vintage,year) ),
         input(location,renewable_tec,vintage,year,mode,node,commodity,level_renewable,time_act,time)
-        * ACT(location,renewable_tec,vintage,year,mode,time) )
-;
+        * ACT(location,renewable_tec,vintage,year,mode,time) ) ;
 
 ***
 * Equation RENEWABLES_POTENTIAL_CONSTRAINT
@@ -770,8 +771,7 @@ RENEWABLES_EQUIVALENCE(node,renewable_tec,commodity,year,time)$(
 RENEWABLES_POTENTIAL_CONSTRAINT(node,commodity,grade,year)$( map_ren_grade(node,commodity,grade,year) )..
     SUM((renewable_tec,time)$( map_ren_com(node,renewable_tec,commodity,year) ),
         REN(node,renewable_tec,commodity,grade,year,time) )
-    =L= SUM(level_renewable, renewable_potential(node,commodity,grade,level_renewable,year) )
-;
+    =L= SUM(level_renewable, renewable_potential(node,commodity,grade,level_renewable,year) ) ;
 
 ***
 * Equation RENEWABLES_CAPACITY_REQUIREMENT
@@ -784,9 +784,8 @@ RENEWABLES_POTENTIAL_CONSTRAINT(node,commodity,grade,year)$( map_ren_grade(node,
 * capacities to provide their full potential.
 *
 *  .. math::
-*     \sum_{y^V, h} CAP_{n,t,y^V,y} \cdot operation\_factor_{n,t,y^V,y} \cdot  \\
-*        capacity\_factor_{n,t,y^V,y,h} \geq \sum_{g,h,l} REN_{n,t,c,g,y,h} / \\
-*        renewable\_capacity\_factor_{n,c,g,l,y}
+*     \sum_{y^V, h} & CAP_{n,t,y^V,y} \cdot operation\_factor_{n,t,y^V,y} \cdot capacity\_factor_{n,t,y^V,y,h} \\
+*        & \quad \geq \sum_{g,h,l} \frac{1}{renewable\_capacity\_factor_{n,c,g,l,y}} \cdot REN_{n,t,c,g,y,h}        
 *
 * This constraint is only active if :math:`renewable\_capacity\_factor_{n,c,g,l,y}` is defined.
 ***
@@ -946,7 +945,7 @@ ACTIVITY_BY_RATING(node,tec,year,commodity,level,time,rating)$(
 *
 * .. math::
 *    \sum_q ACT\_RATING_{n,t,y^V,y,c,l,h,q}
-*    = & \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
+*    = \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}} &
 *         ( input_{n^L,t,y^V,y,m,n,c,l,h^A,h} + output_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
 *      & \quad    \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A} \\
 *
@@ -986,8 +985,7 @@ ACTIVITY_RATING_TOTAL(node,tec,vintage,year,commodity,level,time)$(
 *
 *   .. math::
 *      \sum_q CAP\_FIRM_{n,t,c,l,y,q}
-*      = & \sum_{y^V \leq y}
-*          output_{n^L,t,y^V,y,m,n,c,l,h^A,h} \cdot duration\_time_h \\
+*      = \sum_{y^V \leq y} & output_{n^L,t,y^V,y,m,n,c,l,h^A,h} \cdot duration\_time_h \\
 *        & \quad    \cdot capacity\_factor_{n,t,y^V,y,h} \cdot CAP_{n,t,y^Y,y}
 *      \quad \forall \ t \in T^{INV}
 *
@@ -1010,13 +1008,13 @@ FIRM_CAPACITY_PROVISION(node,inv_tec,year,commodity,level,time)$(
 * The formulation is based on Sullivan et al., 2013 :cite:`sullivan_VRE_2013`.
 *
 *   .. math::
-*      \sum_{t, q \substack{t \in T^{INV} \\ y^V \leq y} }
+*      \sum_{t, q \substack{t \in T^{INV} \\ y^V \leq y} } &
 *          reliability\_factor_{n,t,y,c,l,h,'firm'}
 *          \cdot CAP\_FIRM_{n,t,c,l,y} \\
-*      + \sum_{t,q,y^V \leq y}
+*      + \sum_{t,q,y^V \leq y} &
 *          reliability\_factor_{n,t,y,c,l,h,q}
-*         * ACT\_RATING_{n,t,y^V,y,c,l,h,q} \\
-*         \geq peak\_load\_factor_{n,c,l,y,h} \cdot COMMODITY\_USE_{n,c,l,y}
+*         \cdot ACT\_RATING_{n,t,y^V,y,c,l,h,q} \\
+*         & \quad \geq peak\_load\_factor_{n,c,l,y,h} \cdot COMMODITY\_USE_{n,c,l,y}
 *
 * This constraint is only active if :math:`peak\_load\_factor_{n,c,l,y,h}` is defined.
 ***
@@ -1041,12 +1039,12 @@ SYSTEM_RELIABILITY_CONSTRAINT(node,commodity,level,year,time)$( peak_load_factor
 * contribution from flexible technologies to ensure smooth system operation.
 *
 *   .. math::
-*      &\sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
+*      \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}} &
 *          flexibility\_factor_{n^L,t,y^V,y,m,c,l,h,'unrated'} \\
 *      & \quad   \cdot ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
 *      & \quad   \cdot duration\_time\_rel_{h,h^A} 
 *                \cdot ACT_{n,t,y^V,y,m,h} \\
-*      & + \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
+*      + \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}} &
 *         flexibility\_factor_{n^L,t,y^V,y,m,c,l,h,1} \\
 *      & \quad   \cdot ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
 *      & \quad   \cdot duration\_time\_rel_{h,h^A}
@@ -1072,8 +1070,7 @@ SYSTEM_FLEXIBILITY_CONSTRAINT(node,commodity,level,year,time)$(
             AND map_tec_lifetime(node,tec,vintage,year)),
         flexibility_factor(node,tec,vintage,year,mode,commodity,level,time,rating_unrated)
         * ACT_RATING(node,tec,vintage,year,commodity,level,time,rating_unrated) )
-    =G= 0
-;
+    =G= 0 ;
 
 ACT.LO(node,tec,vintage,year,mode,time)$sum(
     (commodity,level,rating), flexibility_factor(node,tec,vintage,year,mode,commodity,level,time,rating) ) = 0 ;
