@@ -896,8 +896,8 @@ ADDON_ACTIVITY_LO(node,type_addon,year,mode,time)..
 *
 *   .. math::
 *      COMMODITY\_USE_{n,c,l,y}
-*      = \sum_{n^L,t,y^V,m,h} input_{n^L,t,y^V,y,m,n,c,l,h,h} \\
-*          \cdot duration\_time\_rel_{h,h} \cdot ACT_{n^L,t,y^V,y,m,h}
+*      = & \sum_{n^L,t,y^V,m,h} input_{n^L,t,y^V,y,m,n,c,l,h,h} \\
+*        & \quad    \cdot duration\_time\_rel_{h,h} \cdot ACT_{n^L,t,y^V,y,m,h}
 *
 * This constraint and the auxiliary variable is only active if :math:`peak\_load\_factor_{n,c,l,y,h}` or
 * :math:`flexibility\_factor_{n,t,y^V,y,m,c,l,h,r}` is defined.
@@ -946,9 +946,9 @@ ACTIVITY_BY_RATING(node,tec,year,commodity,level,time,rating)$(
 *
 * .. math::
 *    \sum_q ACT\_RATING_{n,t,y^V,y,c,l,h,q}
-*    = \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
-*         ( input_{n^L,t,y^V,y,m,n,c,l,h^A,h} + output_{n^L,t,y^V,y,m,n,c,l,h^A,h} )
-*         \cdot duration\_time\_rel_{h,h^A} \cdot & ACT_{n^L,t,y^V,y,m,h^A} \\
+*    = & \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
+*         ( input_{n^L,t,y^V,y,m,n,c,l,h^A,h} + output_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad    \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A} \\
 *
 ***
 ACTIVITY_RATING_TOTAL(node,tec,vintage,year,commodity,level,time)$(
@@ -986,10 +986,10 @@ ACTIVITY_RATING_TOTAL(node,tec,vintage,year,commodity,level,time)$(
 *
 *   .. math::
 *      \sum_q CAP\_FIRM_{n,t,c,l,y,q}
-*      = \sum_{y^V \leq y} output_{n^L,t,y^V,y,m,n,c,l,h^A,h}
-*          \cdot duration\_time_h \cdot capacity\_factor_{n,t,y^V,y,h}
-*          \cdot CAP_{n,t,y^Y,y}
-*      \quad \forall t \in T^{INV}
+*      = & \sum_{y^V \leq y}
+*          output_{n^L,t,y^V,y,m,n,c,l,h^A,h} \cdot duration\_time_h \\
+*        & \quad    \cdot capacity\_factor_{n,t,y^V,y,h} \cdot CAP_{n,t,y^Y,y}
+*      \quad \forall \ t \in T^{INV}
 *
 ***
 FIRM_CAPACITY_PROVISION(node,inv_tec,year,commodity,level,time)$(
