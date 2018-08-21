@@ -973,10 +973,11 @@ ACTIVITY_RATING_TOTAL(node,tec,vintage,year,commodity,level,time)$(
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * The "firm capacity" that a technology can contribute to system reliability depends on its dispatch characteristics.
 * For dispatchable technologies, the total installed capacity counts toward the firm capacity constraint.
-* This is active if the parameter is defined over :math:`reliability\_factor_{n,t,y,c,l,h,'firm'}.
-* For non-dispatchable technologies, or those that do not have explicit investment,
+* This is active if the parameter is defined over :math:`reliability\_factor_{n,t,y,c,l,h,'firm'}`.
+* For non-dispatchable technologies, or those that do not have explicit investment decisions,
 * the contribution to system reliability is calculated
-* by using the auxiliary variable :math:`ACT\_RATING_{n,t,y^V,y,c,l,h,q}` as a proxy.
+* by using the auxiliary variable :math:`ACT\_RATING_{n,t,y^V,y,c,l,h,q}` as a proxy,
+* with the :math:`reliability\_factor_{n,t,y,c,l,h,q}` defined per rating bin :math:`q`.
 *
 * Equation FIRM_CAPACITY_PROVISION
 * """"""""""""""""""""""""""""""""
@@ -1040,16 +1041,16 @@ SYSTEM_RELIABILITY_CONSTRAINT(node,commodity,level,year,time)$( peak_load_factor
 * contribution from flexible technologies to ensure smooth system operation.
 *
 *   .. math::
-*      \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
-*         flexibility\_factor_{n^L,t,y^V,y,m,c,l,h,'unrated'} \cdot
-*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} )
-*         \cdot duration\_time\_rel_{h,h^A}
-*         \cdot ACT_{n,t,y^V,y,m,h} \\
-*      + \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
-*         flexibility\_factor_{n^L,t,y^V,y,m,c,l,h,1} \cdot
-*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} )
-*         \cdot duration\_time\_rel_{h,h^A}
-*         \cdot * ACT\_RATING_{n,t,y^V,y,c,l,h,q} \\
+*      &\sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
+*          flexibility\_factor_{n^L,t,y^V,y,m,c,l,h,'unrated'} \\
+*      & \quad   \cdot ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad   \cdot duration\_time\_rel_{h,h^A} 
+*                \cdot ACT_{n,t,y^V,y,m,h} \\
+*      & + \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y}}
+*         flexibility\_factor_{n^L,t,y^V,y,m,c,l,h,1} \\
+*      & \quad   \cdot ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad   \cdot duration\_time\_rel_{h,h^A}
+*                \cdot ACT\_RATING_{n,t,y^V,y,c,l,h,q}
 *      \geq 0
 *
 ***
@@ -1241,7 +1242,7 @@ ACTIVITY_BOUND_ALL_MODES_LO(node,tec,year,time)$( bound_activity_lo(node,tec,yea
 *
 *   .. math::
 *     ACT_{n^L,t,y^V,y,m,h^A}
-*     \leq share\_mode\_up_{s,n,y,h} \cdot
+*     \leq share\_mode\_up_{s,n,y,m,h} \cdot
 *     \sum_{m\prime} ACT_{n^L,t,y^V,y,m\prime,h^A}
 *
 ***
@@ -1269,7 +1270,7 @@ SHARE_CONSTRAINT_MODE_UP(shares,node,tec,mode,year,time)$(
 *
 *   .. math::
 *     ACT_{n^L,t,y^V,y,m,h^A}
-*     \geq share\_mode\_lo_{s,n,y,h} \cdot
+*     \geq share\_mode\_lo_{s,n,y,m,h} \cdot
 *     \sum_{m\prime} ACT_{n^L,t,y^V,y,m\prime,h^A}
 *
 ***
@@ -1306,16 +1307,14 @@ SHARE_CONSTRAINT_MODE_LO(shares,node,tec,mode,year,time)$(
 * Equation SHARE_CONSTRAINT_COMMODITY_UP
 * """"""""""""""""""""""""""""""""""""""
 *   .. math::
-*      \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{share}}
-*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \cdot
-*         duration\_time\_rel_{h,h^A} \cdot
-*         ACT_{n^L,t,y^V,y,m,h^A}
-*      \geq
-*      share\_commodity\_up_{s,n,y,h} \cdot
-*      \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{total}}}
-*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \cdot
-*         duration\_time\_rel_{h,h^A} \cdot
-*         ACT_{n^L,t,y^V,y,m,h^A}
+*      & \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{share}}}
+*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A} \\
+*      & \geq
+*        share\_commodity\_up_{s,n,y,h} \cdot
+*        \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{total}}}
+*            ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A}
 *
 * This constraint is only active if :math:`share\_commodity\_up_{s,n,y,h}` is defined.
 ***
@@ -1351,23 +1350,20 @@ SHARE_CONSTRAINT_COMMODITY_UP(shares,node_share,year,time)$( share_commodity_up(
 	) *
         duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
-    ) )   
-;
+    ) ) ;
 
 ***
 * Equation SHARE_CONSTRAINT_COMMODITY_LO
 * """"""""""""""""""""""""""""""""""""""
 *   .. math::
-*      \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{share}}
-*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \cdot
-*         duration\_time\_rel_{h,h^A} \cdot
-*         ACT_{n^L,t,y^V,y,m,h^A}
-*      \leq
-*      share\_commodity\_lo_{s,n,y,h} \cdot
-*      \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{total}}}
-*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \cdot
-*         duration\_time\_rel_{h,h^A} \cdot
-*         ACT_{n^L,t,y^V,y,m,h^A}
+*      & \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{share}}}
+*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A} \\
+*      & \leq
+*        share\_commodity\_lo_{s,n,y,h} \cdot
+*        \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{total}}}
+*            ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A}
 *
 * This constraint is only active if :math:`share\_commodity\_lo_{s,n,y,h}` is defined.
 ***
@@ -1738,7 +1734,6 @@ LAND_CONSTRAINT(node,year)$( SUM(land_scenario$( map_land(node,land_scenario,yea
 ***
 * Dynamic constraints on land use
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-*
 * These constraints enforces upper and lower bounds on the change rate per land scenario.
 *
 * Equation DYNAMIC_LAND_SCEN_CONSTRAINT_UP
@@ -1900,8 +1895,8 @@ DYNAMIC_LAND_TYPE_CONSTRAINT_LO(node,year,land_type)$( is_dynamic_land_lo(node,y
 * Auxiliary variable for left-hand side
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 *
-* RELATION_EQUIVALENCE
-* """"""""""""""""""""
+* Equation RELATION_EQUIVALENCE
+* """""""""""""""""""""""""""""
 *   .. math::
 *      REL_{r,n,y} = \sum_{t} \Bigg(
 *          & \ relation\_new\_capacity_{r,n,y,t} \cdot CAP\_NEW_{n,t,y} \\[4 pt]
