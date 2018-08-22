@@ -1248,13 +1248,20 @@ ACTIVITY_BOUND_ALL_MODES_LO(node,tec,year,time)$( bound_activity_lo(node,tec,yea
 %SLACK_ACT_BOUND_LO% - SLACK_ACT_BOUND_LO(node,tec,year,'all',time)
 ;
 
-
+*----------------------------------------------------------------------------------------------------------------------*
 ***
+* Constraints on shares of technologies and commodities
+* -----------------------------------------------------
+* This section allows to include upper and lower bounds on the shares of modes used by a technology
+* or the shares of commodities produced or consumed by groups of technologies.
+*
+* Share constraints on activity by mode
+* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * Equation SHARES_MODE_UP
 * """""""""""""""""""""""
 * This constraint provides upper bounds of the share of the activity of one mode
-* of a technology. For example, it could limit the share
-* of heat that can be produced in a combined heat and electricity power plant.
+* of a technology. For example, it could limit the share of heat that can be produced
+* in a combined heat and electricity power plant.
 *
 *   .. math::
 *     ACT_{n^L,t,y^V,y,m,h^A}
@@ -1313,7 +1320,31 @@ SHARE_CONSTRAINT_MODE_LO(shares,node,tec,mode,year,time)$(
 ;
 
 ***
-* TODO: add docs
+* Share constraints on commodities
+* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* These constraints allow to set upper and lower bound on the quantity of commodities produced or consumed by a group
+* of technologies relative to the commodities produced or consumed by another group.
+*
+* The implementation is generic and flexible, so that any combination of commodities, levels, technologies and nodes
+* can be put in relation to any other combination.
+*
+* The notation :math:`S^{share}` represents the mapping set `map_shares_commodity_share` denoting all technology types,
+* nodes, commodities and levels to be included in the numerator, and :math:`S^{total}` is
+* the equivalent mapping set `map_shares_commodity_total` for the denominator.
+*
+* Equation SHARE_CONSTRAINT_COMMODITY_UP
+* """"""""""""""""""""""""""""""""""""""
+*   .. math::
+*      & \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{share}}}
+*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A} \\
+*      & \geq
+*        share\_commodity\_up_{s,n,y,h} \cdot
+*        \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{total}}}
+*            ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A}
+*
+* This constraint is only active if :math:`share\_commodity\_up_{s,n,y,h}` is defined.
 ***
 SHARE_CONSTRAINT_COMMODITY_UP(shares,node_share,year,time)$( share_commodity_up(shares,node_share,year,time) )..
 * activity by type_tec_share technologies with map_shares_generic_share entries and a specific mode
@@ -1351,7 +1382,19 @@ SHARE_CONSTRAINT_COMMODITY_UP(shares,node_share,year,time)$( share_commodity_up(
 ;
 
 ***
-* TODO: add docs
+* Equation SHARE_CONSTRAINT_COMMODITY_LO
+* """"""""""""""""""""""""""""""""""""""
+*   .. math::
+*      & \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{share}}}
+*         ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A} \\
+*      & \leq
+*        share\_commodity\_lo_{s,n,y,h} \cdot
+*        \sum_{\substack{n^L,t,m,h^A \\ y^V \leq y, (n,\widehat{t},m,c,l) \sim S^{total}}}
+*            ( output_{n^L,t,y^V,y,m,n,c,l,h^A,h} + input_{n^L,t,y^V,y,m,n,c,l,h^A,h} ) \\
+*      & \quad \cdot duration\_time\_rel_{h,h^A} \cdot ACT_{n^L,t,y^V,y,m,h^A}
+*
+* This constraint is only active if :math:`share\_commodity\_lo_{s,n,y,h}` is defined.
 ***
 SHARE_CONSTRAINT_COMMODITY_LO(shares,node_share,year,time)$( share_commodity_lo(shares,node_share,year,time) )..
 * total input and output by `type_tec_share` technologies mapped to respective commodity, level and node
