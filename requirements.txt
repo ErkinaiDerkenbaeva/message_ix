@@ -9,3 +9,5 @@ sphinxcontrib-bibtex
 sphinxcontrib-fulltoc
 xlrd
 XlsxWriter
+ixmp
+pyam
