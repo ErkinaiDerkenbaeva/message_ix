@@ -2,6 +2,7 @@ ARG base_image
 FROM ${base_image}
 
 RUN conda install --yes pyyaml
+RUN conda install --yes -c conda-forge ixmp
 RUN conda install --yes -c conda-forge pyam
 
 # install ixmp
