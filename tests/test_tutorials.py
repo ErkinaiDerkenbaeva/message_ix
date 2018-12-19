@@ -60,7 +60,7 @@ def test_westeros_baseline(capsys):
     assert errors == []
 
     # I have no idea why this is different between py2 and 3
-    obs = eval(nb.cells[-12]['outputs'][0]['data']['text/plain'])
+    obs = eval(nb.cells[-19]['outputs'][0]['data']['text/plain'])
     exp = 187445.953125
     assert np.isclose(obs, exp)
 
