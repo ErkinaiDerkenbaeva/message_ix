@@ -6,8 +6,7 @@ import message_ix
 import ixmp
 import pyam
 
-
-IAMC_IDX = ['region', 'variable', 'unit', 'year']
+GROUP_IDX = pyam.IAMC_IDX + ['year']
 
 
 class Reporting(object):
@@ -24,35 +23,39 @@ class Reporting(object):
         if np.isnan(scenario.var('OBJ')['lvl']):
             raise ValueError('this scenario has not been solved!')
         self.scenario = scenario
-        self.data = pd.DataFrame(columns=IAMC_IDX + ['value'])
-        self.data = self.data.reset_index(drop=True)\
-            .set_index(IAMC_IDX)
+        self.reporting = pyam.IamDataFrame(scenario)
 
-    def activity(self, variable, region='node_loc', year='year_act'):
+    def activity(self, variable, unit='', region='node_loc', year='year_act',
+                 **kwargs):
         """Aggregates the activity level across technologies
         and converts results to the IAMC template
 
         Parameters
         ----------
-        variable: dict
-            mapping of IAMC-variable to filters by variable/parameter columns
+        variable: str
+            variable string following the IAMC convention,
+            e.g. (`Category|Subcategory|Specification`)
+        unit: str
+            the unit in which the technology activity is modelled
         region: str
             the variable/parameter column to be used for the IAMC region column
         year: str
             the variable/parameter column to be used for the IAMC year column
+        **kwargs
+            filters for variable and parameter columns
         """
-        data = []
         act = self.scenario.var('ACT')
-        for v, mapping in variable.items():
-            df = _apply_filters(act, mapping)
-            df['variable'] = v
-            df['unit'] = ''
-            df.rename(columns={region: 'region', year: 'year', 'lvl': 'value'},
-                      inplace=True)
-            df = df.groupby(IAMC_IDX).sum()['value']
-            data.append(df)
-        data = pd.concat(data).to_frame()
-        self.data = data.combine_first(self.data)
+
+        df = _apply_filters(act, kwargs)
+        df['model'] = self.scenario.model
+        df['scenario'] = self.scenario.scenario
+        df['variable'] = variable
+        df['unit'] = unit
+        df.rename(columns={region: 'region', year: 'year', 'lvl': 'value'},
+                  inplace=True)
+        df = df.groupby(GROUP_IDX).sum()['value'].to_frame()
+
+        self.reporting.append(df, inplace=True)
 
     def finalize(self, comment=None):
         """Finalizes the reporting by committing to the modeling platform
@@ -64,7 +67,7 @@ class Reporting(object):
         """
         try:
             self.scenario.check_out(timeseries_only=True)
-            self.scenario.add_timeseries(self.data.reset_index())
+            self.scenario.add_timeseries(self.reporting.data)
             self.scenario.commit(comment or 'MESSAGEix postprocessing')
         except Exception:
             self.scenario.discard_changes()
