@@ -57,6 +57,20 @@ class Reporting(object):
 
         self.reporting.append(df, inplace=True)
 
+    def aggregate_variable(self, variable, components=None, units=None):
+        """Compute the aggregate of timeseries components or sub-categories
+
+        Parameters
+        ----------
+        variable: str
+            variable for which the aggregate should be computed
+        components: list of str, default None
+            list of variables, defaults to all sub-categories of `variable`
+        units: str or list of str, default None
+            filter variable and components for given unit(s)
+        """
+        self.reporting.aggregate(variable, components, units, append=True)
+
     def finalize(self, comment=None):
         """Finalizes the reporting by committing to the modeling platform
 
